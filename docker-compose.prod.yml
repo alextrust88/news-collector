@@ -1,0 +1,55 @@
+services:
+  newsagent:
+    image: ghcr.io/alextrust88/trusted-news:latest
+    container_name: newsagent-bot
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - METRICS_PORT=${METRICS_PORT:-8000}
+    env_file:
+      - .env
+    ports:
+      - "${METRICS_PORT:-8000}:8000"
+    networks:
+      - newsagent-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  grafana-alloy:
+    image: grafana/alloy:latest
+    container_name: grafana-alloy
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.river
+    volumes:
+      - ./alloy.config.river:/etc/alloy/config.river:ro
+      - alloy-data:/var/lib/alloy/data
+    environment:
+      - GCLOUD_HOSTED_METRICS_URL=${GCLOUD_HOSTED_METRICS_URL}
+      - GCLOUD_HOSTED_METRICS_ID=${GCLOUD_HOSTED_METRICS_ID}
+      - GCLOUD_RW_API_KEY=${GCLOUD_RW_API_KEY}
+    ports:
+      - "12345:12345"
+    networks:
+      - newsagent-network
+    depends_on:
+      newsagent:
+        condition: service_healthy
+    profiles:
+      - monitoring
+
+volumes:
+  alloy-data:
+
+networks:
+  newsagent-network:
+    driver: bridge
+

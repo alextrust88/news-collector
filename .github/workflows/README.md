@@ -2,36 +2,71 @@
 
 Этот каталог содержит конфигурации для GitHub Actions CI/CD.
 
-## CI Workflow (`.github/workflows/ci.yml`)
+## Workflows
+
+### 1. CI (`.github/workflows/ci.yml`)
 
 Автоматически запускается при:
 - Push в ветки `main` или `develop`
 - Создании Pull Request в ветки `main` или `develop`
 
-### Что проверяется:
+**Что проверяется:**
+- Тесты на разных ОС (Ubuntu, macOS) и версиях Python (3.11, 3.12)
+- Синтаксис Python файлов
+- Импорты модулей
 
-1. **Тесты** - запускаются все тесты из директории `tests/`
-2. **Синтаксис** - проверка синтаксиса Python файлов
-3. **Импорты** - проверка что все модули корректно импортируются
+### 2. Build and Push Docker Image (`.github/workflows/docker-build.yml`)
 
-### Матрица тестирования:
+Автоматически запускается при:
+- Push в ветку `main`
+- Создании тега `v*` (например, `v1.0.0`)
+- Pull Request в `main` (только сборка, без публикации)
 
-- **ОС:** Ubuntu Latest, macOS Latest
-- **Python:** 3.11, 3.12
+**Что делает:**
+- Собирает Docker образ
+- Публикует в GitHub Container Registry (ghcr.io)
+- Использует кеширование для ускорения
 
-### Использование uv
+**Результат:**
+Образ доступен по адресу: `ghcr.io/alextrust88/trusted-news:latest`
 
-Workflow использует `uv` для управления зависимостями, что обеспечивает:
-- Быструю установку пакетов
-- Воспроизводимые сборки
-- Кеширование зависимостей
+### 3. Deploy to Server (`.github/workflows/deploy.yml`)
 
-## Добавление новых проверок
+Автоматически запускается при:
+- Push в ветку `main` (после успешной сборки образа)
+- Ручной запуск через `workflow_dispatch`
 
-Для добавления новых проверок отредактируйте `.github/workflows/ci.yml`:
+**Что делает:**
+1. Собирает Docker образ
+2. Публикует в GitHub Container Registry
+3. Копирует конфигурационные файлы на сервер
+4. Подключается к серверу по SSH
+5. Обновляет и перезапускает контейнеры
+6. Выполняет health check
 
-```yaml
-- name: Your check name
-  run: your-command-here
-```
+**Требуемые секреты:**
+- `DEPLOY_HOST` - IP или домен сервера
+- `DEPLOY_USER` - пользователь для SSH
+- `DEPLOY_SSH_KEY` - приватный SSH ключ
+- `DEPLOY_PORT` (опционально) - SSH порт (по умолчанию 22)
+- `DEPLOY_PATH` (опционально) - путь к проекту (по умолчанию `/opt/newsagent`)
 
+## Настройка секретов
+
+1. Перейдите в Settings → Secrets and variables → Actions
+2. Добавьте необходимые секреты (см. DEPLOY.md)
+
+## Ручной запуск деплоя
+
+1. Перейдите в Actions → Deploy to Server
+2. Нажмите "Run workflow"
+3. Выберите environment (production/staging)
+4. Нажмите "Run workflow"
+
+## Отладка
+
+Если workflow не работает:
+1. Проверьте логи в разделе Actions
+2. Убедитесь что все секреты настроены
+3. Проверьте что SSH ключ правильный
+4. Проверьте что на сервере установлены Docker и Docker Compose
