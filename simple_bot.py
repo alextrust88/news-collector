@@ -29,14 +29,17 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 def main() -> None:
     """Запуск бота."""
-    # Проверка токена
-    if not config.TELEGRAM_BOT_TOKEN or config.TELEGRAM_BOT_TOKEN == "ВАШ_ТОКЕН_ЗДЕСЬ":
-        print("❌ ОШИБКА: Не установлен TELEGRAM_BOT_TOKEN в config.py")
+    try:
+        # config.py сам проверит наличие токена и выбросит ошибку если его нет
+        token = config.TELEGRAM_BOT_TOKEN
+    except ValueError as e:
+        print(f"❌ ОШИБКА: {e}")
+        print("   Создайте файл .env с переменной TELEGRAM_BOT_TOKEN")
         print("   Получите токен у @BotFather в Telegram")
         return
     
     # Создание приложения
-    application = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
+    application = Application.builder().token(token).build()
     
     # Регистрация обработчиков команд
     application.add_handler(CommandHandler("start", start))

@@ -1,11 +1,25 @@
 """
 Конфигурационный файл.
-Замените значения ниже на ваши реальные данные.
+Читает настройки из переменных окружения или .env файла.
 """
+import os
+from dotenv import load_dotenv
+
+# Загружаем переменные из .env файла (если он существует)
+load_dotenv()
 
 # Токен вашего Telegram бота (получите у @BotFather)
-TELEGRAM_BOT_TOKEN = "ВАШ_ТОКЕН_ЗДЕСЬ"
+# Устанавливается через переменную окружения TELEGRAM_BOT_TOKEN
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 
 # ID вашего чата (получите у @userinfobot)
-TELEGRAM_CHAT_ID = "ВАШ_CHAT_ID_ЗДЕСЬ"
+# Устанавливается через переменную окружения TELEGRAM_CHAT_ID
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
+# Проверка наличия обязательных переменных
+if not TELEGRAM_BOT_TOKEN:
+    raise ValueError(
+        "TELEGRAM_BOT_TOKEN не установлен. "
+        "Создайте файл .env или установите переменную окружения."
+    )
 
