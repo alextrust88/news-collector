@@ -284,6 +284,24 @@ docker-compose -f docker-compose.prod.yml logs -f
 curl http://localhost:8000/metrics
 ```
 
+### Автоматическая диагностика метрик
+
+Если метрики не работают, используйте скрипт диагностики:
+
+```bash
+# Скопируйте скрипт на сервер (с вашего компьютера)
+scp diagnose_metrics.sh user@server:/opt/newsagent/
+
+# На сервере запустите диагностику
+cd /opt/newsagent
+chmod +x diagnose_metrics.sh
+./diagnose_metrics.sh
+```
+
+Скрипт проверит все аспекты работы метрик и даст рекомендации по исправлению проблем.
+
+Подробнее см. [CHECK_METRICS.md](CHECK_METRICS.md#8-диагностика-на-сервере)
+
 ## Обновление кода на сервере
 
 Если нужно обновить конфигурационные файлы (docker-compose.prod.yml, alloy.config.river):
