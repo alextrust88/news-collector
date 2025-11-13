@@ -30,7 +30,7 @@ alloy.config.local.river
 Thumbs.db
 
 # uv
-uv.lock
+# uv.lock - НЕ игнорируем, нужен для воспроизводимых сборок Docker
 
 # Тесты
 .pytest_cache/

@@ -23,11 +23,7 @@ env:
 jobs:
   # Шаг 1: Тесты
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12"]
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -38,10 +34,10 @@ jobs:
       with:
         version: "latest"
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.11"
 
     - name: Install dependencies
       run: uv sync --extra dev

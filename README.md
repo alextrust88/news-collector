@@ -75,8 +75,7 @@ uv run pytest --cov=. --cov-report=html
 Проект использует GitHub Actions для автоматизации:
 
 - ✅ Тесты запускаются на каждом push и pull request
-- ✅ Проверка на разных ОС (Ubuntu, macOS)
-- ✅ Проверка на разных версиях Python (3.11, 3.12)
+- ✅ Проверка на Ubuntu с Python 3.11
 - ✅ Автоматическая сборка Docker образа в GitHub Container Registry
 - ✅ Автоматический деплой на сервер при push в main
 
