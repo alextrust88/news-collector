@@ -1,10 +1,8 @@
 # NewsAgent - Telegram бот для новостей
 
-[![CI](https://github.com/USERNAME/NewsAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/NewsAgent/actions/workflows/ci.yml)
+[![CI](https://github.com/alextrust88/trusted-news/actions/workflows/ci.yml/badge.svg)](https://github.com/alextrust88/trusted-news/actions/workflows/ci.yml)
 
 Простой сервер для работы с Telegram ботом.
-
-> **Примечание:** Замените `USERNAME` в бейдже на ваш GitHub username после создания репозитория.
 
 ## Быстрый старт
 
