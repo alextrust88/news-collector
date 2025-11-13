@@ -135,6 +135,9 @@ jobs:
     if: |
       (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
       github.event_name == 'workflow_dispatch'
+    env:
+      # Используем GHCR_TOKEN если задан, иначе GITHUB_TOKEN
+      REGISTRY_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
     
     steps:
     - name: Checkout repository
@@ -182,8 +185,41 @@ jobs:
           
           echo "✅ Используем: $COMPOSE_CMD"
           
-          # Логинимся в GitHub Container Registry
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          # Проверяем наличие .env файла
+          if [ ! -f .env ]; then
+            echo "⚠️  Файл .env не найден. Создайте его с необходимыми переменными."
+            echo "   См. инструкции в DEPLOY.md"
+            exit 1
+          fi
+          
+          # Логинимся в GitHub Container Registry с retry
+          # REGISTRY_TOKEN уже установлен в env (GHCR_TOKEN или GITHUB_TOKEN)
+          if [ -n "$REGISTRY_TOKEN" ]; then
+            echo "🔑 Токен найден, выполняется вход в ${{ env.REGISTRY }}"
+          else
+            echo "❌ Токен не найден! Проверьте настройку секретов."
+            exit 1
+          fi
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if echo "$REGISTRY_TOKEN" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin 2>/dev/null; then
+              echo "✅ Успешный вход в ${{ env.REGISTRY }}"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⚠️  Попытка $RETRY_COUNT/$MAX_RETRIES не удалась, повтор через 5 сек..."
+                sleep 5
+              else
+                echo "❌ Не удалось войти в ${{ env.REGISTRY }} после $MAX_RETRIES попыток"
+                echo "   Проверьте что токен имеет права 'read:packages'"
+                echo "   Если используете GITHUB_TOKEN, попробуйте создать Personal Access Token"
+                echo "   с правами 'read:packages' и добавить его как секрет GHCR_TOKEN"
+                exit 1
+              fi
+            fi
+          done
           
           # Останавливаем старые контейнеры
           $COMPOSE_CMD -f docker-compose.prod.yml down || true

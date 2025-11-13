@@ -133,3 +133,53 @@ ls -la /usr/bin/docker
 groups  # должен содержать 'docker'
 ```
 
+## Ошибка: "error from registry: denied" при pull образа
+
+**Проблема:** Нет доступа к GitHub Container Registry.
+
+**Решение:**
+
+1. **Проверьте что репозиторий публичный** или настройте доступ для GITHUB_TOKEN
+
+2. **Или создайте Personal Access Token:**
+   - GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Создайте токен с правами `read:packages`
+   - Добавьте его в GitHub Secrets как `GHCR_TOKEN`
+   - Обновите workflow чтобы использовать `secrets.GHCR_TOKEN`
+
+3. **Проверьте что образ существует:**
+```bash
+# На вашем компьютере
+docker pull ghcr.io/alextrust88/trusted-news:latest
+```
+
+## Ошибка: "env file /opt/newsagent/.env not found"
+
+**Проблема:** Файл `.env` не создан на сервере.
+
+**Решение:**
+
+1. **Создайте файл `.env` на сервере:**
+```bash
+cd /opt/newsagent
+nano .env
+```
+
+2. **Добавьте необходимые переменные:**
+```bash
+TELEGRAM_BOT_TOKEN=ваш_токен
+TELEGRAM_CHAT_ID=ваш_chat_id
+METRICS_PORT=8000
+```
+
+3. **Установите правильные права:**
+```bash
+chmod 600 .env
+```
+
+4. **Проверьте:**
+```bash
+ls -la .env
+cat .env  # убедитесь что файл читается
+```
+

@@ -118,19 +118,31 @@ cd /opt/newsagent
 
 ### 4. Создайте файл `.env` на сервере
 
+**⚠️ ВАЖНО:** Файл `.env` должен быть создан на сервере до первого деплоя!
+
 ```bash
 cd /opt/newsagent
 nano .env
 ```
 
-Добавьте:
+Добавьте следующие переменные (обязательные для работы бота):
 ```bash
-TELEGRAM_BOT_TOKEN=ваш_токен
+TELEGRAM_BOT_TOKEN=ваш_токен_от_@BotFather
 TELEGRAM_CHAT_ID=ваш_chat_id
 METRICS_PORT=8000
-GCLOUD_HOSTED_METRICS_URL=ваш_url
-GCLOUD_HOSTED_METRICS_ID=ваш_id
-GCLOUD_RW_API_KEY=ваш_ключ
+```
+
+Если используете Grafana Cloud для мониторинга, добавьте также:
+```bash
+GCLOUD_HOSTED_METRICS_URL=https://prometheus-prod-01-eu-west-0.grafana.net/api/prom/push
+GCLOUD_HOSTED_METRICS_ID=ваш_metrics_id
+GCLOUD_RW_API_KEY=ваш_api_ключ
+```
+
+**Проверка прав доступа:**
+```bash
+chmod 600 .env  # Только владелец может читать
+ls -la .env     # Должен показать права -rw------- 
 ```
 
 ### 5. Скопируйте необходимые файлы
@@ -173,18 +185,36 @@ cat ~/.ssh/id_ed25519.pub | ssh user@server "mkdir -p ~/.ssh && cat >> ~/.ssh/au
 cat ~/.ssh/id_ed25519
 ```
 
-2. **Добавьте в GitHub Secrets:**
-   - Перейдите в ваш репозиторий на GitHub
-   - Settings → Secrets and variables → Actions
-   - Нажмите "New repository secret"
-   - Name: `DEPLOY_SSH_KEY`
-   - Value: вставьте **весь** приватный ключ, включая:
+2. **Добавьте в GitHub Secrets (Settings → Secrets and variables → Actions):**
+
+   Перейдите в ваш репозиторий на GitHub → Settings → Secrets and variables → Actions
+   
+   Добавьте следующие секреты:
+   
+   - **`DEPLOY_HOST`** - IP адрес или домен сервера
+   - **`DEPLOY_USER`** - имя пользователя для SSH (например, `deploy` или `root`)
+   - **`DEPLOY_SSH_KEY`** - приватный SSH ключ (весь ключ, включая BEGIN/END):
      ```
      -----BEGIN OPENSSH PRIVATE KEY-----
      ...содержимое ключа...
      -----END OPENSSH PRIVATE KEY-----
      ```
-   - Нажмите "Add secret"
+   - **`DEPLOY_PORT`** - порт SSH (по умолчанию 22, можно не указывать)
+   - **`DEPLOY_PATH`** - путь к директории проекта на сервере (по умолчанию `/opt/newsagent`)
+   
+   **⚠️ ВАЖНО про доступ к GitHub Container Registry:**
+   
+   Workflow автоматически использует `GHCR_TOKEN` (если задан) или `GITHUB_TOKEN` для логина в registry.
+   
+   **Вариант 1: Использовать автоматический GITHUB_TOKEN (по умолчанию)**
+   - Работает для публичных репозиториев
+   - Для приватных репозиториев может потребоваться настройка прав
+   
+   **Вариант 2: Использовать Personal Access Token (рекомендуется)**
+   - Создайте Personal Access Token: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Права: `read:packages`
+   - Добавьте как секрет `GHCR_TOKEN` в GitHub Secrets
+   - Workflow автоматически будет использовать его вместо GITHUB_TOKEN
 
 **Важно:**
 - Копируйте **приватный** ключ (не публичный!)
@@ -255,10 +285,12 @@ docker-compose -f docker-compose.prod.yml up -d
 - Проверьте что SSH ключ добавлен в GitHub Secrets
 - Проверьте что публичный ключ добавлен на сервер: `~/.ssh/authorized_keys`
 
-### Ошибка: "unauthorized: authentication required"
+### Ошибка: "unauthorized: authentication required" или "error from registry: denied"
 
 - Проверьте что на сервере настроен доступ к ghcr.io
-- Проверьте что GITHUB_TOKEN валиден
+- Проверьте что `GITHUB_TOKEN` имеет права `read:packages`
+- Если репозиторий private, убедитесь что GITHUB_TOKEN имеет доступ к нему
+- Попробуйте создать Personal Access Token с правами `read:packages` и использовать его вместо автоматического GITHUB_TOKEN
 
 ### Ошибка: "No such file or directory"
 
