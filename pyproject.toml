@@ -1,0 +1,13 @@
+[project]
+name = "newsagent"
+version = "0.1.0"
+description = "Telegram бот для сбора и отправки новостей"
+requires-python = ">=3.8"
+dependencies = [
+    "python-telegram-bot>=20.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
